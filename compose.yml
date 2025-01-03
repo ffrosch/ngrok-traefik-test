@@ -1,20 +1,19 @@
 services:
   app:
-    container_name: app
-    volumes:
-      - ./app:/app
     build:
       context: ./app
+    volumes:
+      - ./app:/app
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.app.entrypoints=web,websecure"
+      - "traefik.http.services.app.loadbalancer.server.port=80"
       # App available at http://app.localhost
       - "traefik.http.routers.app-local.rule=Host(`app.localhost`)"
       # App available at https://<ngrok url>
-      - "traefik.http.routers.app.rule=Host(`${NGROK_URL}`)"
-      - "traefik.http.routers.app.entrypoints=web,websecure"
-      - "traefik.http.services.app.loadbalancer.server.port=80"
+      - "traefik.http.routers.app.rule=Host(`${NGROK_DOMAIN}`)"
       # App available at https://<ngrok url>/app
-      - "traefik.http.routers.app-chained-rule.rule=Host(`${NGROK_URL}`) && Path(`/app`)"
+      - "traefik.http.routers.app-chained-rule.rule=Host(`${NGROK_DOMAIN}`) && Path(`/app`)"
       - "traefik.http.middlewares.app-remove-prefix.stripprefix.prefixes=/app"
       - "traefik.http.routers.app-chained-rule.middlewares=app-remove-prefix@docker"
 
@@ -49,6 +48,6 @@ services:
     command:
       - "http"
       - "host.docker.internal:80"
-      - "--domain=${NGROK_URL}"
+      - "--domain=${NGROK_DOMAIN}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
