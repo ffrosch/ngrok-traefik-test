@@ -1,19 +1,27 @@
 services:
   app:
     container_name: app
+    volumes:
+      - ./app:/app
     build:
       context: ./app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.app.rule=Host(`app.localhost`)"
+      # App available at http://app.localhost
+      - "traefik.http.routers.app-local.rule=Host(`app.localhost`)"
+      # App available at https://<ngrok url>
+      - "traefik.http.routers.app.rule=Host(`${NGROK_URL}`)"
       - "traefik.http.routers.app.entrypoints=web,websecure"
-      # This is not needed, because the container exposes the port 80 itself
-      # - "traefik.http.services.app.loadbalancer.server.port=80"
+      - "traefik.http.services.app.loadbalancer.server.port=80"
+      # App available at https://<ngrok url>/app
+      - "traefik.http.routers.app-chained-rule.rule=Host(`${NGROK_URL}`) && Path(`/app`)"
+      - "traefik.http.middlewares.app-remove-prefix.stripprefix.prefixes=/app"
+      - "traefik.http.routers.app-chained-rule.middlewares=app-remove-prefix@docker"
 
   traefik:
     image: "traefik:latest"
     command:
-      - "--api.insecure=true" # Enables Traefik's dashboard via port 8080
+      - "--api.insecure=true" # Enables Traefik's dashboard via port 8080: http://traefik.localhost:8080
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
@@ -32,15 +40,15 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    command:
-      - "http"
-      - "http://app:80"
-      - "--domain=${NGROK_URL}"
     depends_on:
       - traefik
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
-    ports:
-      - 4040:4040
     labels:
       - "traefik.enable=false"
+    command:
+      - "http"
+      - "host.docker.internal:80"
+      - "--domain=${NGROK_URL}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
