@@ -8,7 +8,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.app.entrypoints=web,websecure"
       - "traefik.http.services.app.loadbalancer.server.port=80"
-      # App available at http://app.localhost
+      # App available at http://app.localhost (not via ngrok, only via locally)
       - "traefik.http.routers.app-local.rule=Host(`app.localhost`)"
       # App available at https://<ngrok url>
       - "traefik.http.routers.app.rule=Host(`${NGROK_DOMAIN}`)"
@@ -18,7 +18,7 @@ services:
       - "traefik.http.routers.app-chained-rule.middlewares=app-remove-prefix@docker"
 
   traefik:
-    image: "traefik:latest"
+    image: "traefik:v3.2.3"
     command:
       - "--api.insecure=true" # Enables Traefik's dashboard via port 8080: http://traefik.localhost:8080
       - "--providers.docker=true"
@@ -38,7 +38,7 @@ services:
       - "traefik.http.routers.traefik.entrypoints=web,websecure"
 
   ngrok:
-    image: ngrok/ngrok:latest
+    image: ngrok/ngrok:3.19.0-debian
     depends_on:
       - traefik
     environment:
@@ -49,5 +49,6 @@ services:
       - "http"
       - "host.docker.internal:80"
       - "--domain=${NGROK_DOMAIN}"
+    # necessary for ngrok to be able to pass the host header to traefik
     extra_hosts:
       - "host.docker.internal:host-gateway"
