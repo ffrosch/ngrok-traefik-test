@@ -79,6 +79,7 @@ services:
       - "http"
       - "host.docker.internal:80"
       - "--domain=${NGROK_DOMAIN}"
+      - "--log=stdout"
     # necessary for ngrok to be able to pass the host header to traefik
     extra_hosts:
       - "host.docker.internal:host-gateway"
