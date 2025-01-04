@@ -12,11 +12,12 @@ The goal is to get a valid HTTPS connection to a locally running app.
 Copy `.env.example` to `.env` and replace the placeholders with your authtoken and ngrok domain.
 
 Run `docker compose up` to start the project.
+Access logs for the HTTP calls will be visible in the console.
 
 Access your services locally:
 
 - App: <http://app.localhost>
-- Traefik Dashboard: <http://traefik.localhost:8080>
+- Traefik Dashboard: <http://traefik.localhost> or <https://traefik.localhost>
 
 Access your app via ngrok:
 
