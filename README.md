@@ -26,3 +26,11 @@ Access your app via ngrok:
 
 - Domain-based: <https://your.domain.ngrok-free.app>
 - Path-based: <https://your.domain.ngrok-free.app/app>
+
+## Good to know
+
+> [!WARNING]
+> On Windows/Mac use `host.docker.internal` instead of `host.docker.internal:host-gateway`
+
+- ngrok needs access to the host to be able to push routes to the traefik router (this is accomplished with `extra_hosts: - "host.docker.internal:host-gateway"`)
+- ngrok can rewrite the host header of the request to match an existing traefik route with `--request-header-add "host: my.route"` (this replaces the existing host header instead of adding another one)
