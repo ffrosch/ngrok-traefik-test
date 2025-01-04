@@ -4,6 +4,7 @@ services:
       context: ./app
     volumes:
       - ./app:/app
+      - ./.env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.app.entrypoints=web,websecure"

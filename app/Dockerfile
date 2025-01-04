@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install FastAPI and Uvicorn
-RUN pip install fastapi uvicorn
+RUN pip install fastapi uvicorn python-dotenv
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
