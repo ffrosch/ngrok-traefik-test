@@ -46,13 +46,26 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Traefik dashboard
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
-      - "traefik.http.routers.traefik.entrypoints=web,websecure"
+
+      # Middlewares
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+
+      # Router for HTTP (port 80) - redirect to HTTPS (port 443)
+      - "traefik.http.routers.traefik-http-router.entrypoints=web"
+      - "traefik.http.routers.traefik-http-router.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik-http-router.middlewares=https-redirect"
+
+      # Router for HTTPS (port 443)
+      - "traefik.http.routers.traefik-https-router.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik-https-router.entrypoints=websecure"
+      - "traefik.http.routers.traefik-https-router.tls=true"
+
+      # Traefik dashboard service
+      - "traefik.http.services.traefik-dashboard-service.loadbalancer.server.port=8080"  # Make it available at http://traefik.localhost
 
   ngrok:
     image: ngrok/ngrok:3.19.0-debian
