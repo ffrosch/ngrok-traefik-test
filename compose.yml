@@ -7,16 +7,32 @@ services:
       - ./.env:/app/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.app.entrypoints=web,websecure"
-      - "traefik.http.services.app.loadbalancer.server.port=80"
-      # App available at http://app.localhost (not via ngrok, only via locally)
-      - "traefik.http.routers.app-local.rule=Host(`app.localhost`)"
+
+      # Middlewares
+      - "traefik.http.middlewares.app-remove-prefix.stripprefix.prefixes=/app"
+      - "traefik.http.middlewares.add-traefik-header.headers.customRequestHeaders.X-Handled-By-Traefik=true"
+
+      # Router "app"
       # App available at https://<ngrok url>
+      - "traefik.http.routers.app.entrypoints=web,websecure"
       - "traefik.http.routers.app.rule=Host(`${NGROK_DOMAIN}`)"
+      - "traefik.http.routers.app.middlewares=add-traefik-header"
+
+      # Router "app-local"
+      # App available at http://app.localhost (only locally or if the host-header is rewritten with ngrok)
+      - "traefik.http.routers.app-local.rule=Host(`app.localhost`)"
+      - "traefik.http.routers.app-local.middlewares=add-traefik-header"
+
+      # Router "app-chained-rule"
       # App available at https://<ngrok url>/app
       - "traefik.http.routers.app-chained-rule.rule=Host(`${NGROK_DOMAIN}`) && Path(`/app`)"
-      - "traefik.http.middlewares.app-remove-prefix.stripprefix.prefixes=/app"
-      - "traefik.http.routers.app-chained-rule.middlewares=app-remove-prefix@docker"
+      - "traefik.http.routers.app-chained-rule.middlewares=app-remove-prefix"
+      - "traefik.http.routers.app-chained-rule.middlewares=add-traefik-header"
+
+      # Backend App Service
+      # Optional, because the default exposed port of the Dockerfile is 80 and will automatically be used by traefik
+      - "traefik.http.services.backend-app-service.loadbalancer.server.port=80"
+
 
   traefik:
     image: "traefik:v3.2.3"
